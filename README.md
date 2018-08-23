@@ -12,6 +12,6 @@ We are working though Hadley Wickham and Garrett Grolemund's [R for Data Science
 
 Interested in leading a discussion? Having trouble with a section? Please email charlottesville@rladies.org
 
-Follow us on Twitter @RladiesCville
+Follow us on Twitter @[RladiesCville](https://twitter.com/RLadiesCville)
 
 :beer:
