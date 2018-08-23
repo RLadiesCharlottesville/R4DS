@@ -5,8 +5,6 @@ date: "7/1/2018"
 output: html_document
 ---
 
-Hello world!
-
 This is the tentative schedule for the [R-Ladies Cville](https://www.meetup.com/rladies-charlottesville/) Summer of Data Science book club. Notes for completed sections can be found on [GitHub](https://github.com/RLadiesCharlottesville). 
 
 If you have any questions, reach out to charlottesville@rladies.org
