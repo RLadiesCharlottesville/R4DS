@@ -18,6 +18,7 @@ library(tidyverse)
 ggplot2::diamonds
 library(nycflights13)
 data(flights)
+library(viridis)
 ```
 
 
@@ -154,6 +155,14 @@ Let's look at x, y, and z together:
 without_unusual <- diamonds %>%
     filter(x > 3 | x < 10, y > 3 | y < 30, z > 1 | z < 9)
 
+# Numerical distribution of each variable
+diamonds %>%
+  count(cut_width(x, 5))
+diamonds %>%
+  count(cut_width(y, 5)) # x and y are similar (excluding weird outliers in y)
+diamonds %>%
+  count(cut_width(z, 5)) # z is smaller than x and y --> probably the depth
+
 # Side by side histograms:
 diamonds %>%
     gather(key = "key", value = "value", x:z) %>% # gather into short form for ggplot
@@ -165,7 +174,7 @@ diamonds %>%
 
 # Overlaying:
 diamonds %>%
-    gather(key = "key", value = "value", x:z) %>% # gether into short form for ggplot
+    gather(key = "key", value = "value", x:z) %>% # gather into long form for ggplot so that x:z are all in one column titled key
     ggplot(mapping = aes(x = value, color = key)) + 
     geom_freqpoly(binwidth = 0.1) +  # where's x (length)?
     ylim(0, 3000) + # limit y axis to zoom in - assuming lg values are outliers
@@ -190,6 +199,12 @@ ggplot(diamonds, mapping = aes(x = price)) +
 **3.) How many diamonds are 0.99 carat? How many are 1 carat? What do you think is the cause of the difference?**
 
 ```{r}
+#distribution
+diamonds %>%
+  filter(carat < 3) %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(bins = 200)
+
 # 0.99 carat:
 diamonds %>%
     filter(carat == .99) %>% 
@@ -199,9 +214,14 @@ diamonds %>%
 diamonds %>%
     filter(carat == 1) %>%
     nrow() # there are 1558 diamonds
+
+# 1.01 carat:
+diamonds %>%
+    filter(carat == 1.01) %>%
+    nrow() # there are 2242 diamonds
 ```
 
-**Answer**: there are 23 diamonds that are .99 carats, and 1,558 diamonds that are 1 carat. I assume that dealers probably just rounded up. 
+**Answer**: there are 23 diamonds that are .99 carats, 1,558 diamonds that are 1 carat, and 2,242 that are 1.01 carats. It seems that making a diamond just under a popular carat size is not a good idea. I suspect that it because you cannot sell a .99 carat diamond as a 1 carat diamond, but you can sell a 1.01 carat diamond as a 1 carat. Close but under does not sell! 
 
 **4.) Compare and contrast `coord_cartesian()` vs `xlim()` or `ylim()` when zooming in on a histogram. What happens if you leave `binwidth` unset? What happens if you try and zoom so only half a bar shows?**
 
@@ -215,21 +235,36 @@ ggplot(diamonds) +
 
 # Set the binwidth to something more appropriate:
 ggplot(diamonds) +
-    geom_histogram(mapping = aes(x = carat), binwidth = .01) + # binwidth not set
+    geom_histogram(mapping = aes(x = carat), binwidth = .01) +
     coord_cartesian(xlim = c(0.95, 1.05))
 
 # That looks much better. 
 
 # The same plot, but using xlim():
 ggplot(diamonds) +
-    geom_histogram(mapping = aes(x = carat)) + # binwidth not set
+    geom_histogram(mapping = aes(x = carat), binwidth = .01) + # binwidth not set
     xlim(0.95, 1.05)
 
 # This time, it looks like ggplot removed 47617 rows before plotting that did not fit within the xlim range. 
 ```
 
-**Answer**: `xlim()` and `ylim()` change the axis limits and drop data observations that don't fall within the limit (so it won't keep half a bar) while `coord_cartesian()` keeps all observations. <span style = "color:blue" Why do the two plots still look different though?</span>
+**Answer**: `xlim()` and `ylim()` change the axis limits and drop data observations that don't fall within the limit (so it won't keep half a bar) while `coord_cartesian()` keeps all observations. <span style = "color:blue" These two plots look different because coord_cartesian does not delete the observations that are at the limits of the plot while xlim deletes them </span>
 
+Interestingly, when setting the number of bins, the plots produced by coord_cartesian and xlim will be different from each other in a different way than above.
+```{r}
+# Using coord_cartesian(), 400 bins, and limits of 0 and 3:
+diamonds %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(bins = 400) +
+  coord_cartesian(xlim = c(0, 3))
+
+# Using xlim(), 400 bins, and limits of 0 and 3:
+diamonds %>%
+  ggplot(aes(x = carat)) +
+  geom_histogram(bins = 400) +
+  xlim(0, 3)
+```
+**Answer**: `xlim()` and `ylim()` change the axis limits and drop data observations that don't fall within the limit while `coord_cartesian()` keeps all observations. <span style = "color:blue" These two plots look different because coord_cartesian calculates the bins using all the data while xlim calculates the bins on the data inside the xlimits </span>
 
 ## Missing Values
 
@@ -255,13 +290,18 @@ diamonds %>%
 
 # Note warning message saying it removed the 13 rows containing NAs
 
-# Plot bar chart of cut (discrete variable):
+# Plot bar chart of cut (discrete variable) after creating some missings:
 diamonds %>%
     mutate(cut = ifelse(cut == "Fair", NA, cut)) %>%
     ggplot(aes(x = cut)) +
     geom_bar()
 
-# Note warning message saying 1610 variables couldn't be counted 
+# Note warning message saying 1610 rows were removed
+# Also, the character variable has been changed into numeric in the mutate line. If you don't want that to happen, set as.character in the mutate line:
+diamonds %>%
+    mutate(cut = ifelse(cut == "Fair", NA, as.character(cut))) %>%
+    ggplot(aes(x = cut)) +
+    geom_bar()
 ```
 
 **Answer**: histograms are for binning continuous variables and bar charts are for binning discrete variables. They both remove `NA` variables before plotting. If you set `na.rm` to `TRUE`, the values are removed silently (i.e. without warning).
@@ -360,7 +400,15 @@ library(lvplot)
 ggplot(diamonds, aes(x = cut, y = price)) +
     geom_lv()
 
-# Uhhh what?
+# I think lv breaks the data into several bins (each corresponding to a letter) and then plots the density in each bin. You can specify the number of bins using k = # (but I am not sure how the k is counted)
+ggplot(diamonds, aes(x = cut, y = price)) +
+    geom_lv(k = 3)
+
+ggplot(diamonds, aes(x = cut, y = price)) +
+    geom_lv(k = 5)
+
+ggplot(diamonds, aes(x = cut, y = price)) +
+    geom_lv(k = 10)
 ```
 
 **Answer**: overall, letter value plots are to reduce over calling of outliers in larger data sets (n > 10k) and reduce the number of points marked as outliers. 
@@ -438,7 +486,7 @@ counts %>%
            prop = n / total) %>%
     ggplot(aes(x = color, y = cut, fill = prop)) +
     geom_tile() +
-    scale_fill_viridis()
+    scale_fill_viridis() #install and load viridis package for this to work
 ```
 
 **Answer**: to clearly show the distribution of cut within color, calculate a new variable, `prop`, which is the proportion of each `cut` within a `color`, and then plot as a tile. 
@@ -504,14 +552,49 @@ diamonds %>%
     xlim(0,2.5)
 ```
 
-**Answer**: see above output. <span style = "color:blue">Is there a better way to label facet in the legend?</span>
+**Answer**: see above output. <span style = "color:blue">Is there a better way to label facet in the legend?</span>. 
+
+Yes, using the cut function and the labels argument, you can label the categories
+
+```{r}
+diamonds %>% 
+    mutate(priceCAT = cut(price, 3, labels = c("Cheap", "Medium", "Expensive"))) %>% # cut price into 3 labeled intervals
+    ggplot(aes(x = carat)) + # plot it
+    geom_freqpoly(aes(color = priceCAT)) + # color = one of 3 price intervals
+    xlim(0,2.5)
+```
+
+Another possible answer discretizes price using boxplots
+```{r}
+diamonds %>%
+  ggplot(aes(x = price, y = carat)) + 
+  geom_boxplot(aes(group = cut_width(price, 1000)))
+```
+
 
 **3.) How does the price distribution of very large diamonds compare to small diamonds? Is it as you expect, or does it surprise you?**
 
+I chose to only include diamonds up to 3 carats in this analysis, so maybe that does not answer the question about "very large" diamonds...
+```{r}
+diamonds2 <- diamonds %>%
+  filter(carat < 3) %>%
+  mutate(size = cut(carat, breaks = c(0, 0.5, 1, 1.5, 2, 2.5, 3), labels = c(1:6)))
 
+diamonds2 %>%
+  ggplot(aes(x = price)) + 
+  geom_density(aes(color = size, fill = size)) +
+  facet_wrap(~ size)
+```
 
+**Answer** Diamonds of small size are most often low price no matter the shape, color, or quality. The width of price distribution gets wider as size increases. Diamonds above 1.5 carats have more price variability than smaller diamonds.
 
+**4). Combine two of the techniques you’ve learned to visualise the combined distribution of cut, carat, and price. **
 
+Again, the below plot is only for diamonds up to 3 carats
+```{r}
+ggplot(diamonds2, aes(x = size, y = price, fill = cut)) +
+  geom_boxplot()
+```
 
 
 
