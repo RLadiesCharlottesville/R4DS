@@ -2,7 +2,7 @@
 title: "Exploratory Data Analysis"
 author: "Samantha Toet"
 date: "8/23/2018"
-output: html_document
+output: github_document
 ---
 
 ## Intro
