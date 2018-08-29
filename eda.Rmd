@@ -165,7 +165,7 @@ diamonds %>%
 
 # Overlaying:
 diamonds %>%
-    gather(key = "key", value = "value", x:z) %>% # gether into short form for ggplot
+    gather(key = "key", value = "value", x:z) %>% # gather into short form for ggplot
     ggplot(mapping = aes(x = value, color = key)) + 
     geom_freqpoly(binwidth = 0.1) +  # where's x (length)?
     ylim(0, 3000) + # limit y axis to zoom in - assuming lg values are outliers
