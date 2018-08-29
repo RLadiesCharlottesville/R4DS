@@ -2,7 +2,8 @@
 title: "Data Transformation"
 author: "Samantha Toet"
 date: "7/20/2018"
-output: html_document
+output: 
+  github_document
 ---
 
 ## Intro
