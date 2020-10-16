@@ -1,0 +1,128 @@
+---
+title: "Data Import"
+author: "Samantha Toet"
+date: "7/23/2020"
+output: html_document
+---
+
+```{r setup, echo=FALSE}
+library(tidyverse)
+```
+
+## Intro
+
+From [11. Data Import](https://r4ds.had.co.nz/data-import.html)
+
+The `readr` package turns flat files into dataframes. 
+
+The output is a tibble, they don't convert character vectors to factors, or use row names. 
+
+### Practice
+
+**1. What function would you use to read a file where fields were separated with | ?"**
+
+`readr::read_delim("filename", delim = "|")`
+
+**2. Apart from file, skip, and comment, what other arguments do read_csv() and read_tsv() have in common?**
+
+- `col_names` defines column names (bool or char vector supplied)
+- `col_types` defines types of columns 
+- `locale` controls location-based defaults (ex. currency)
+- `na` defines values to treat as NA
+- `quoted_na` defines missing values in strings
+- `quote` single character used to quote strings
+- `trim_ws` trims leading and trailing white space
+- `n_max` max number of records to read in
+- `guess_max` max number of records to use for guessing column types
+- `progress` display progress bar
+- `skip_empty_rows` how to handle empty rows
+
+**3. What are the most important arguments to `read_fwf()`?**
+
+The most important arguments are `col_positions` (if created by `fwf_empty()`, `fwf_widths()` or `fwf_positions()`). To read in only selected fields, use `fwf_positions()`. If the width of the last column is variable (a ragged fwf file), supply the last end position as NA.
+
+## Parsing a vector
+
+Parse functions take a character vector and return either a logical, integer, or date. 
+
+Each type has its own set of complications due to encodings and locales. 
+
+### Practice
+
+**1. What are the most important arguments to `locale()`?**
+
+The most important arguments to `locale()` are `date_format()`, which defines how and in what language dates appear, and `decimal_mark` which determines how vales are grouped. 
+
+**2. What happens if you try and set `decimal_mark` and `grouping_mark` to the same character? What happens to the default value of `grouping_mark` when you set `decimal_mark` to “,”? What happens to the default value of `decimal_mark` when you set the `grouping_mark` to “.”?**
+
+```{r error=TRUE}
+
+# Different decimal and grouping parses as expected:
+parse_double(c("1.23", "1234.5"), locale = locale(decimal_mark = ".", grouping_mark = ","))
+
+# Same decimal and grouping throws and error:
+parse_double(c("1.23", "1234.5"), locale = locale(decimal_mark = ".", grouping_mark = "."))
+
+# If decimal is set to , then grouping becomes . and vice-versa
+parse_double(c("1.23", "1234.5"), locale = locale(decimal_mark = ","))
+parse_double(c("1.23", "1234.5"), locale = locale(grouping_mark = "."))
+```
+
+**3. I didn’t discuss the `date_format` and `time_format` options to `locale()`. What do they do? Construct an example that shows when they might be useful.**
+
+The `date_format` and `time_format` arguments determine the default date and time formats. This is helpful if you're working with data that's not US encoded. For example:
+
+```{r}
+parse_date("1 janvier 2015", "%d %B %Y", locale = locale("fr"))
+```
+
+**4. If you live outside the US, create a new locale object that encapsulates the settings for the types of file you read most commonly.**
+
+Let's pretend I live in Montreal, Canada:
+
+```{r}
+locale("fr", tz = "EST")
+```
+
+**5. What’s the difference between `read_csv()` and `read_csv2()`?**
+
+They both read in CSV files, however `read_csv2()` uses ; for the field separator and , for the decimal point. This is common formatting in some European countries. 
+
+**6. What are the most common encodings used in Europe? What are the most common encodings used in Asia? Do some googling to find out.**
+
+Western Europe encodings (ISO 8859-1, ISO 8859-15 and cp1252)
+
+Chinese encodings (GB2312, …), and then come Korean (EUC-KR), Cyrillic (cp1251, KOI8-R, …), East Europe (cp1250, ISO-8859-2), Arabic (cp1256, ISO-8859-6), etc.
+
+**7. Generate the correct format string to parse each of the following dates and times:**
+
+```{r}
+d1 <- "January 1, 2010"
+parse_date(d1, "%B %m, %Y")
+
+d2 <- "2015-Mar-07"
+parse_date(d2, "%Y-%b-%e")
+
+d3 <- "06-Jun-2017"
+parse_date(d3, "%e-%b-%Y")
+
+d4 <- c("August 19 (2015)", "July 1 (2015)")
+parse_date(d4, "%B %d (%Y)")
+
+d5 <- "12/30/14" # Dec 30, 2014
+parse_date(d5, "%m/%d/%y")
+
+t1 <- "1705"
+parse_time(t1, "%H%M")
+
+t2 <- "11:15:10.12 PM"
+parse_time(t2, "%I:%M:%OS %p")
+```
+
+## Parsing & writing files
+
+Essentially, `readr` guesses the type of each column by using the first 1000 rows as a heuristic. 
+
+When it comes to writing files, `write_csv` encodes strings in UTF-8 and dates in ISO8601. 
+
+Class information is lost when writing to a CSV, so other options are `write_rds` or `write_feather`

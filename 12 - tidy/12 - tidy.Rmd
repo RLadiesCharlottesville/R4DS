@@ -1,0 +1,251 @@
+---
+title: "Tidy"
+author: "Samantha Toet"
+date: "9/14/2020"
+output: html_document
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+## Intro
+
+From [12. Tidy data](https://r4ds.had.co.nz/tidy-data.html)
+
+Three rules of tidy data:
+
+1.) Each variable must have it's own column
+2.) Each observation must have it's own row
+3.) Each value must have it's own cell
+
+### Practice
+
+**1. Using prose, describe how the variables and observations are organised in each of the sample tables.**
+
+```{r}
+table1
+```
+
+table1 can be decribed as tidy. 
+
+```{r}
+table2
+```
+
+Although each variable has a column, table2 is not tidy because each observations is not recorded in a single row (country/year x2). 
+
+```{r}
+table3
+```
+
+table3 is not tidy because there are multiple vales per cell in the rate variable. It also has a single observation (country/year) spread across rows. 
+
+```{r}
+# Spread across two tibbles
+table4a # cases
+table4b  # population
+```
+
+tables4a and 4b is not tidy because they are spread across two tibbles.
+
+## Pivoting
+
+Pivot LONGER when column names are not names of variables, but values of a variable. For example: 
+
+```{r, error=FALSE}
+# pivot_longer(c("cols with names that are values not varables"),
+#   names_to = "new column name that the above col names will be values in",
+#   values_to = "new column name that the values in the first cols will become values in")
+```
+  
+Pivot WIDER when an observation is scattered across multiple rows. For example: 
+
+```{r, error=FALSE}
+# pivot_wider(names_from = "col that has diff variables as values",
+#   values_from = "values from first col")
+```
+
+### Practice
+
+**1. Why are `pivot_longer()` and `pivot_wider()` not perfectly symmetrical? Carefully consider the following example:** 
+
+```{r}
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016), # class = dbl
+  half  = c(   1,    2,     1,    2), # class = dbl
+  return = c(1.88, 0.59, 0.92, 0.17) # class = dbl
+)
+
+stocks %>% 
+  pivot_wider(names_from = year, values_from = return) %>% # class stays dbl for all 
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return") # class for year is character
+```
+
+**(Hint: look at the variable types and think about column names.) `pivot_longer()` has a `names_ptype` argument, e.g. `names_ptype = list(year = double())`. What does it do?**
+
+When the tibble is pivoted longer, the class for the year variable is changed from a dbl to a character. The `names_ptype` argument preserves the class. 
+
+**2. Why does this code fail?**
+
+```{r error=TRUE}
+table4a %>% 
+  pivot_longer(c(1999, 2000), names_to = "year", values_to = "cases")
+```
+
+The above code fails because `pivot_longer` expects either character column names or column locations by index number. Since 1999 and 2000 are written as numeric, `pivot_longer` thinks those are the column numbers, as in it is looking for the 1999th and 2000th column, and since those don't exist, it throws an error. 
+
+To resolve this issue, put the numeric column names as characters:
+
+```{r}
+table4a %>% 
+  pivot_longer(c("1999", "2000"), names_to = "year", values_to = "cases")
+```
+
+**3. What would happen if you widen this table? Why? How could you add a new column to uniquely identify each value?**
+
+```{r}
+people <- tribble(
+  ~name,             ~names,  ~values,
+  #-----------------|--------|------
+  "Phillip Woods",   "age",       45,
+  "Phillip Woods",   "height",   186,
+  "Phillip Woods",   "age",       50,
+  "Jessica Cordero", "age",       37,
+  "Jessica Cordero", "height",   156
+)
+```
+
+Because `people` has a column named values, `pivot_wider` throws an error:
+```{r}
+people %>%
+  pivot_wider(names_from = c("names"), values_from = c("values"))
+
+```
+
+To resolve this, you need to rename a column:
+
+```{r}
+people %>% 
+  mutate(measurements = values) %>%
+  pivot_wider(names_from = c("names"), values_from = c("values"))
+```
+
+**4. Tidy the simple tibble below. Do you need to make it wider or longer? What are the variables?**
+
+```{r}
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+)
+```
+
+We need to make the table longer so that each row is a unique count. The variables should then be `count`, `gender`, `pregnant`.
+
+```{r}
+preg %>%
+  pivot_longer(c(male, female), 
+               names_to = "gender", 
+               values_to = "count")
+
+```
+
+## Separating and uniting
+
+**1. What do the `extra` and `fill` arguments do in `separate()`? Experiment with the various options for the following two toy datasets.**
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"))
+```
+
+In the above example, the value "g" gets dropped when we separate into 3 columns. To resolve this, we would want to use the `extra` argument to determine what to do with the extra value. We can either emit a warning, drop the extra values (the default), or merge them. For example:
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"), extra = "merge")
+```
+
+```{r}
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"))
+```
+
+In the above example, there are not enough values in the second row to separate into three columns, so one of the values is `NA`. To resolve this, we would want to use the `fill` argument to determine what do to when there are not enough values. We can either emit a warning, fill with missing values on the right (the default), or fill with missing values on the left. For example:
+
+```{r}
+tibble(x = c("a,b,c", "d,e", "f,g,i")) %>% 
+  separate(x, c("one", "two", "three"), fill = "left")
+```
+
+**2. Both `unite()` and `separate()` have a `remove` argument. What does it do? Why would you set it to `FALSE`?**
+
+The `remove` argument lets you remove the input column from the output dataframe. To create a new variable, but keep the old one, you would set it to false. For example:
+
+```{r}
+tibble(x = c("a,b,c", "d,e,f,g", "h,i,j")) %>% 
+  separate(x, c("one", "two", "three"), remove = FALSE)
+```
+
+**3. Compare and contrast `separate()` and `extract()`. Why are there three variations of separation (by position, by separator, and with groups), but only one unite?**
+
+The `extract()` function lets you use regular expressions to define different groups and create new columns, where `separate()` is more limited. With `extract()` and `separate()` only one column can be chosen, but there are many choices how to split that single column into different columns. With `unite()`, there are many choices as to which columns to include, but only onechoice as to how to combine their contents into a single vector. 
+
+## Missing values
+
+There are two types of missing values:
+
+- Explicitly, i.e. flagged with NA.
+- Implicitly, i.e. simply not present in the data.
+
+An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence.
+
+### Practice
+
+**1. Compare and contrast the `fill` arguments to `pivot_wider()` and `complete()`.**
+
+In `pivot_wider()` the argument `values_fill` is a named list specifying what each value should be filled in with when missing. For example:
+
+```{r}
+fish_encounters %>%
+  pivot_wider(
+    names_from = station,
+    values_from = seen,
+    values_fill = list(seen = 0)
+  )
+```
+
+In `complete()`, the `fill` argument is a named list that for each variable supplies a single value to use instead of NA for missing combinations. These will also replace existing explicit missing values. 
+
+## Case Study Example
+
+**4. For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data.**
+
+```{r}
+who %>%
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    values_drop_na = TRUE
+  ) %>% 
+  mutate(
+    key = stringr::str_replace(key, "newrel", "new_rel")
+  ) %>%
+  separate(key, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1) -> who
+```
+
+```{r}
+who %>%
+  group_by(country, year, sex) %>%
+  summarise(total = sum(cases)) %>%
+  ungroup() %>%
+  ggplot(aes(year, total, col = sex)) +
+  geom_point()
+```
+
+
+

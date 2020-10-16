@@ -1,0 +1,36 @@
+---
+title: "workflow_basics"
+author: "Samantha Toet"
+date: "7/23/2020"
+output: html_document
+---
+
+## Scripts
+
+From [6. Workflows: Scripts](http://r4ds.had.co.nz/workflow-scripts.html)
+
+*Ch. 4 in the book*
+
+- execute the complete script in one step: `Cmd/Ctrl` + `Shift` + `S`
+- never include `install.packages()` or `setwd()` in a script that you share. It’s very antisocial to change settings on someone else’s computer!
+
+### Practice
+
+**1. Go to the RStudio Tips twitter account, https://twitter.com/rstudiotips and find one tip that looks interesting. Practice using it!**
+
+**Answer**: This status is a game changer, practice gif included in Tweet.
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Loved the cooking metaphors 🔪🎂 in <a href="https://twitter.com/hadleywickham?ref_src=twsrc%5Etfw">@hadleywickham</a>&#39;s <a href="https://twitter.com/RLadiesSF?ref_src=twsrc%5Etfw">@RLadiesSF</a> talk yesterday!  but the best part was watching Hadley speed-code live and learning neat tricks like this: <a href="https://t.co/UVmrPbxpho">pic.twitter.com/UVmrPbxpho</a></p>&mdash; Irene Steves (@i_steves) <a href="https://twitter.com/i_steves/status/995394452821721088?ref_src=twsrc%5Etfw">May 12, 2018</a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+Also the [RStudio IDE Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2016/01/rstudio-IDE-cheatsheet.pdf)
+
+**2. What other common mistakes will RStudio diagnostics report? Read https://support.rstudio.com/hc/en-us/articles/205753617-Code-Diagnostics to find out.**
+
+**Answer**: Some other mistakes that RStudio diagnostics will report are:
+
+- missing arguments, unmatched arguments, partially matched arguments, and too many arguments
+- extra or missing commas
+- warn if a symbol is used with no definition in the scope - might ask if it's a typo of something similar
+- warn if variable is defined but not used
+- style diagnostic checks to see if your code conforms to [Hadley Wickham’s style guide](http://adv-r.had.co.nz/Style.html), and reports style warnings when encountered, esp. whitespace 
