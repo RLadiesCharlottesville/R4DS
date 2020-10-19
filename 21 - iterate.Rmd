@@ -1,0 +1,56 @@
+---
+title: "21 - iterate"
+author: "Samantha Toet"
+date: "10/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Intro
+
+Iteration help when you need to do the same thing to multiple inputs, i.e. repeating the same operation on different columns, or on different datasets. 
+
+Functional programming (FP) offers tools to extract out this duplicated code, so each common for loop pattern gets its own function.
+
+---- skipping for loop section ----
+
+## map()
+
+### Practice
+
+1. Write code that uses one of the map functions to:
+
+a. Compute the mean of every column in `mtcars`.
+
+```{r}
+mtcars %>%
+  map(., mean)
+```
+
+b. Determine the type of each column in `nycflights13::flights`.
+
+```{r}
+nycflights13::flights %>%
+  map(., class)
+```
+
+c. Compute the number of unique values in each column of `iris`.
+
+```{r}
+iris %>%
+  map(., ~ length(unique(.)))
+```
+
+d. Generate 10 random normals from distributions with means of -10, 0, 10, and 100.
+
+```{r}
+x <- list(10, 0, 10, 100) %>%
+  map(. ~ rnrom)
+
+```
+
+2. 

@@ -1,0 +1,22 @@
+---
+title: "workflow_projects"
+author: "Samantha Toet"
+date: "7/23/2020"
+output: html_document
+---
+
+## Projects
+
+From [8. Workflow: Projects](http://r4ds.had.co.nz/workflow-projects.html)
+
+*Ch. 6 in the book*
+
+- Code should be saved in scripts, not just in your environment
+- RStudio shows your current working directory at the top of the console *(I always forget this!)*
+- never use absolute paths in your scripts (EX. C:), because they hinder sharing
+- keep all the files associated with a project together — input data, R scripts, analytical results, figures -- and keep it in the appropriate subdirectory
+- when you click on an `.Rproj` file, you'll openthe same working directory, command history, and all the files you were working on that were saved to that project but with a fresh environment
+
+There are no practice question for this section. 
+
+*Adios!*
