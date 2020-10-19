@@ -54,7 +54,7 @@ tables4a and 4b is not tidy because they are spread across two tibbles.
 Pivot LONGER when column names are not names of variables, but values of a variable. For example: 
 
 ```{r, error=FALSE}
-# pivot_longer(c("cols with names that are values not varables"),
+# pivot_longer(c("cols with names that are values not variables"),
 #   names_to = "new column name that the above col names will be values in",
 #   values_to = "new column name that the values in the first cols will become values in")
 ```
